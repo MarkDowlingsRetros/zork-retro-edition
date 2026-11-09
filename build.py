@@ -3,17 +3,19 @@
 
     python3 build.py            ->  index.html (one self-contained file)
 
-Reads app.html and zork1.z3 from this folder, gzips each, stores them as
+Reads zork-retro-edition-readable.html and zork1.z3 from this folder, gzips each, stores them as
 base64 inside a tiny loader that unpacks them in the browser. Uses Zopfli
 for the smallest output if installed (pip install zopfli), otherwise gzip.
-Because app.html is formatted for reading, the rebuilt file is a little
+Because the readable file is formatted for reading, the rebuilt file is a little
 bigger than the published one, which was built from the minified original.
 """
 import base64, gzip, pathlib, re
 
 here = pathlib.Path(__file__).parent
-page = (here / "app.html").read_text(encoding="utf-8")
-page = re.sub(r'\s*<script src="zork1-story\.js"></script>', "", page)  # the loader supplies the story
+page = (here / "zork-retro-edition-readable.html").read_text(encoding="utf-8")
+# drop the embedded story script; the loader supplies the story from zork1.z3 instead
+page = re.sub(r"\s*<script>\s*// Zork I, Release 119.*?</script>", "", page, count=1, flags=re.S)
+assert "window.__ZSTORY=" not in page, "embedded story not found"
 story = (here / "zork1.z3").read_bytes()
 
 try:
